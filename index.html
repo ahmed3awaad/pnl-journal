@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Daily P&L Journal</title>
+<title>Road to Glory</title>
 <style>
 :root{
   --bg:#f6f7f9; --card:#ffffff; --text:#14181f; --muted:#6b7480; --border:#e3e6eb;
@@ -41,7 +41,7 @@ select,input[type=text],input[type=number]{background:var(--card);border:1px sol
 .scroll{overflow-x:auto}
 .cal{display:grid;grid-template-columns:repeat(7,minmax(84px,1fr)) minmax(90px,1fr);gap:6px;min-width:700px}
 .dow{font-size:12px;color:var(--muted);text-align:center;padding:2px}
-.day{min-height:78px;border:1px solid var(--border);border-radius:10px;padding:6px 8px;cursor:pointer;display:flex;flex-direction:column;justify-content:space-between;background:var(--bg)}
+.day{min-height:88px;border:1px solid var(--border);border-radius:10px;padding:6px 8px;cursor:pointer;display:flex;flex-direction:column;justify-content:space-between;background:var(--bg)}
 .day:hover{border-color:var(--accent)}
 .day.out{opacity:.35;cursor:default}
 .day.win{background:var(--green-bg);border-color:transparent}
@@ -50,7 +50,8 @@ select,input[type=text],input[type=number]{background:var(--card);border:1px sol
 .day .n{font-size:12px;color:var(--muted)}
 .day .amt{font-size:15px;font-weight:650;text-align:right}
 .day .note{font-size:10px;color:var(--muted);text-align:right}
-.week{border:1px dashed var(--border);border-radius:10px;padding:6px 8px;display:flex;flex-direction:column;justify-content:space-between;min-height:78px}
+.day .pct{font-size:11px;color:var(--muted);text-align:right}
+.week{border:1px dashed var(--border);border-radius:10px;padding:6px 8px;display:flex;flex-direction:column;justify-content:space-between;min-height:88px}
 .week .n{font-size:12px;color:var(--muted)}
 .week .amt{font-size:14px;font-weight:650;text-align:right}
 dialog{background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:14px;padding:18px;width:min(360px,92vw)}
@@ -73,7 +74,7 @@ svg text{fill:var(--muted);font-size:11px}
 <body>
 <div class="wrap">
   <header>
-    <h1>📒 Daily P&amp;L Journal</h1>
+    <h1>📒 Road to Glory</h1>
     <div class="tools">
       <label class="bal">Starting balance <input type="number" id="start" step="0.01" min="0" placeholder="0.00"></label>
       <select id="cur" title="Currency"></select>
@@ -111,6 +112,7 @@ svg text{fill:var(--muted);font-size:11px}
   <div class="row">
     <label>Amount</label>
     <input type="number" id="amt" step="0.01" min="0" placeholder="0.00">
+    <div class="hint" id="pcthint" style="margin-top:2px"></div>
   </div>
   <div class="row">
     <label>Note (optional)</label>
@@ -156,6 +158,13 @@ svg text{fill:var(--muted);font-size:11px}
   si.value = state.start ? state.start : "";
   si.onchange = function(){ var n = parseFloat(si.value); state.start = (isNaN(n) || n < 0) ? 0 : n; persist(); render(); };
 
+  function balBefore(k){
+    var b = state.start || 0;
+    Object.keys(state.entries).forEach(function(kk){ if (kk < k) b += state.entries[kk].amount; });
+    return b;
+  }
+  function pctStr(p){ return (p>0?"+":"") + p.toFixed(2) + "%"; }
+
   function render(){
     var y = view.y, m = view.m;
     var months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
@@ -186,7 +195,9 @@ svg text{fill:var(--muted);font-size:11px}
         if (ent){
           var v = ent.amount;
           el.className += v>0 ? " win" : v<0 ? " loss" : "";
-          html += '<div><div class="amt '+cls(v)+'">'+fmt(v,true)+'</div>' + (ent.note ? '<div class="note">'+esc(ent.note)+'</div>' : '') + '</div>';
+          var bb = balBefore(k);
+          var pc = (state.start > 0 && bb > 0) ? '<div class="pct">'+pctStr(v/bb*100)+'</div>' : '';
+          html += '<div><div class="amt '+cls(v)+'">'+fmt(v,true)+'</div>' + pc + (ent.note ? '<div class="note">'+esc(ent.note)+'</div>' : '') + '</div>';
           weekSum += v; weekDays++; monthSum += v;
           if (v>0) wins++; else if (v<0) losses++; else ties++;
           if (best===null || v>best.v) best={v:v,k:k};
@@ -260,10 +271,18 @@ svg text{fill:var(--muted);font-size:11px}
 
   // dialog
   var dlg = $("dlg");
+  function updateHint(){
+    var h = $("pcthint"), n = parseFloat($("amt").value), base = balBefore(editKey);
+    if (!state.start) { h.textContent = "Set your starting balance to see the % of your account."; return; }
+    if (base <= 0) { h.textContent = "Balance before this day: " + fmt(base); return; }
+    if (isNaN(n) || n <= 0) { h.textContent = "Balance before this day: " + fmt(base); return; }
+    h.textContent = pctStr(editSign*n/base*100) + " of your balance (" + fmt(base) + " before this day)";
+  }
   function setSign(s){
     editSign = s;
     $("bwin").className = s>0 ? "on-win" : "";
     $("bloss").className = s<0 ? "on-loss" : "";
+    updateHint();
   }
   function openDlg(k){
     editKey = k;
@@ -278,6 +297,7 @@ svg text{fill:var(--muted);font-size:11px}
   }
   $("bwin").onclick = function(){ setSign(1); };
   $("bloss").onclick = function(){ setSign(-1); };
+  $("amt").oninput = updateHint;
   $("cancel").onclick = function(){ dlg.close(); };
   $("save").onclick = function(){
     var raw = $("amt").value;
