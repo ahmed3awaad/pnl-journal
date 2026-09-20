@@ -65,6 +65,8 @@ dialog h3{margin:0 0 12px;font-size:16px}
 .sign button.on-win{background:var(--green-bg);border-color:var(--green);color:var(--green)}
 .sign button.on-loss{background:var(--red-bg);border-color:var(--red);color:var(--red)}
 .hint{font-size:12px;color:var(--muted)}
+.bal{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.bal input{width:120px}
 svg text{fill:var(--muted);font-size:11px}
 </style>
 </head>
@@ -73,6 +75,7 @@ svg text{fill:var(--muted);font-size:11px}
   <header>
     <h1>📒 Daily P&amp;L Journal</h1>
     <div class="tools">
+      <label class="bal">Starting balance <input type="number" id="start" step="0.01" min="0" placeholder="0.00"></label>
       <select id="cur" title="Currency"></select>
       <button id="exp">Export</button>
       <button id="imp">Import</button>
@@ -123,8 +126,9 @@ svg text{fill:var(--muted);font-size:11px}
 (function(){
   var KEY = "daily_pnl_journal_v1";
   var CURS = {"USD":"$","EUR":"€","GBP":"£","EGP":"E£","SAR":"SAR ","AED":"AED "};
-  var state = { entries:{}, cur:"USD" };
+  var state = { entries:{}, cur:"USD", start:0 };
   try { var raw = localStorage.getItem(KEY); if (raw) { var p = JSON.parse(raw); if (p && p.entries) state = p; } } catch(e){}
+  if (typeof state.start !== "number") state.start = 0;
   function persist(){ try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e){} }
 
   var now = new Date();
@@ -148,6 +152,9 @@ svg text{fill:var(--muted);font-size:11px}
   Object.keys(CURS).forEach(function(c){ var o=document.createElement("option"); o.value=c; o.textContent=c; cs.appendChild(o); });
   cs.value = state.cur;
   cs.onchange = function(){ state.cur = cs.value; persist(); render(); };
+  var si = $("start");
+  si.value = state.start ? state.start : "";
+  si.onchange = function(){ var n = parseFloat(si.value); state.start = (isNaN(n) || n < 0) ? 0 : n; persist(); render(); };
 
   function render(){
     var y = view.y, m = view.m;
@@ -203,8 +210,16 @@ svg text{fill:var(--muted);font-size:11px}
     var traded = wins + losses + ties;
     var wr = traded ? Math.round(wins/traded*100)+"%" : "–";
     var st = $("stats");
+    var allTotal = 0, before = 0, mStart = key(y,m,1), hasAny = false;
+    Object.keys(state.entries).forEach(function(k){
+      var a = state.entries[k].amount; hasAny = true; allTotal += a; if (k < mStart) before += a;
+    });
+    var balance = state.start + allTotal, monthBase = state.start + before;
+    var ret = (traded && monthBase > 0) ? (monthSum/monthBase*100) : null;
     st.innerHTML =
+      stat("Account balance", (state.start > 0 || hasAny) ? fmt(balance) : "–", (state.start > 0 || hasAny) ? cls(allTotal) : "") +
       stat("Month P&L", traded? fmt(monthSum,true) : "–", cls(monthSum)) +
+      stat("Month return", ret===null ? "–" : (ret>0?"+":"") + ret.toFixed(2) + "%", ret===null ? "" : cls(ret)) +
       stat("Green days", wins, "pos") +
       stat("Red days", losses, "neg") +
       stat("Day win rate", wr, "") +
@@ -221,16 +236,16 @@ svg text{fill:var(--muted);font-size:11px}
     var svg = $("chart");
     var keys = Object.keys(state.entries).sort();
     if (!keys.length){ svg.innerHTML = '<text x="450" y="120" text-anchor="middle">Log a few days to see your equity curve</text>'; $("curvehint").textContent=""; return; }
-    var cum = 0, pts = [0];
-    keys.forEach(function(k){ cum += state.entries[k].amount; pts.push(cum); });
-    $("curvehint").innerHTML = 'Total: <b class="'+cls(cum)+'">'+fmt(cum,true)+'</b> over '+keys.length+' days';
+    var base = state.start || 0, cum = 0, pts = [base];
+    keys.forEach(function(k){ cum += state.entries[k].amount; pts.push(base + cum); });
+    $("curvehint").innerHTML = (base > 0 ? 'Balance: <b>'+fmt(base+cum)+'</b> · ' : '') + 'P&amp;L: <b class="'+cls(cum)+'">'+fmt(cum,true)+'</b> over '+keys.length+' days';
     var W=900,H=240,P=30;
     var min = Math.min.apply(null,pts), max = Math.max.apply(null,pts);
     if (min===max){ min-=1; max+=1; }
     var xs = function(i){ return P + (W-2*P)*(pts.length===1?0:i/(pts.length-1)); };
     var ys = function(v){ return H-P - (H-2*P)*(v-min)/(max-min); };
     var d = pts.map(function(v,i){ return (i?"L":"M")+xs(i).toFixed(1)+" "+ys(v).toFixed(1); }).join(" ");
-    var zero = ys(0);
+    var zero = ys(base);
     var color = cum>=0 ? "var(--green)" : "var(--red)";
     var area = d + " L"+xs(pts.length-1).toFixed(1)+" "+zero.toFixed(1)+" L"+xs(0).toFixed(1)+" "+zero.toFixed(1)+" Z";
     svg.innerHTML =
@@ -297,7 +312,7 @@ svg text{fill:var(--muted);font-size:11px}
     r.onload = function(){
       try {
         var p = JSON.parse(r.result);
-        if (p && p.entries){ state = p; if (!CURS[state.cur]) state.cur="USD"; cs.value = state.cur; persist(); render(); }
+        if (p && p.entries){ state = p; if (!CURS[state.cur]) state.cur="USD"; if (typeof state.start !== "number") state.start = 0; cs.value = state.cur; si.value = state.start ? state.start : ""; persist(); render(); }
       } catch(err){}
     };
     r.readAsText(f);
