@@ -90,7 +90,19 @@ button{cursor:pointer}
 .wrap{max-width:1080px;margin:0 auto;padding:max(18px, env(safe-area-inset-top)) 16px 64px}
 
 /* ---------- top bar ---------- */
-.bar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:22px}
+.bar{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px;margin-bottom:20px}
+.bar .actions{justify-self:end}
+.curbal{
+  justify-self:center;display:flex;align-items:center;gap:14px;
+  background:var(--surface);box-shadow:var(--shadow);border:1px solid var(--line);
+  border-radius:16px;padding:8px 10px 8px 16px;min-width:0
+}
+.curbal .l{font-size:12px;font-weight:700;color:var(--muted);line-height:1.1}
+.curbal .v{font-family:"Overpass",sans-serif;font-weight:800;font-size:24px;line-height:1.1;margin-top:4px;letter-spacing:-.02em;white-space:nowrap}
+.curbal .v .cents{font-size:.62em;color:var(--muted);font-weight:700}
+.curbal .chip{font-size:12.5px;padding:4px 9px}
+.curbal.empty .v{color:var(--faint)}
+.curbal .setlink{font-size:12.5px}
 .brand{display:flex;align-items:center;gap:10px;min-width:0}
 .brand .shield{width:42px;height:42px;display:block;flex:none;filter:drop-shadow(0 2px 4px rgba(10,14,30,.18))}
 .brand .words{display:flex;flex-direction:column;min-width:0}
@@ -167,15 +179,15 @@ button{cursor:pointer}
 .monthbar h2{font-family:"Overpass",sans-serif;font-weight:700;font-size:24px;letter-spacing:-.02em;margin:0}
 .monthbar h2 span{color:var(--faint);font-weight:600}
 .mleft{display:flex;align-items:center;gap:12px;flex-wrap:wrap;min-width:0}
-.panel{margin-bottom:14px;padding:20px 20px 22px}
-.panel .monthbar{margin-bottom:16px}
-.monthbar h2{font-size:30px}
+.panel{margin-bottom:14px;padding:17px 17px 19px}
+.panel .monthbar{margin-bottom:13px}
+.monthbar h2{font-size:25px}
 .nav{display:flex;gap:4px;align-items:center}
-.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr)) minmax(0,1.05fr);gap:6px}
-.dow{font-size:12.5px;color:var(--muted);font-weight:600;padding:0 4px 2px}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr)) minmax(0,1.05fr);gap:5px}
+.dow{font-size:11.5px;color:var(--muted);font-weight:600;padding:0 4px 2px}
 .dow.wk{color:var(--gold)}
 .day{
-  position:relative;min-height:108px;border-radius:14px;padding:9px 10px;
+  position:relative;min-height:92px;border-radius:12px;padding:8px 9px;
   display:flex;flex-direction:column;justify-content:space-between;
   background:var(--cell);border:1px solid transparent;text-align:left;
   transition:border-color .12s, transform .12s;
@@ -184,24 +196,24 @@ button.day:hover{border-color:var(--faint)}
 button.day:active{transform:scale(.97)}
 .day.blank{background:transparent}
 .day.future{opacity:.5}
-.day .n{font-size:12.5px;font-weight:700;color:var(--muted)}
+.day .n{font-size:11.5px;font-weight:700;color:var(--muted)}
 .day.today .n{
   color:var(--gold);display:inline-flex;align-items:center;gap:5px
 }
 .day.today .n::after{content:"";width:6px;height:6px;border-radius:9px;background:var(--gold)}
 .day.today{border-color:var(--gold-line)}
 .day .foot{text-align:right;min-width:0}
-.day .amt{font-weight:800;font-size:16.5px;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.day .pct{font-size:11.5px;font-weight:600;opacity:.8;white-space:nowrap}
+.day .amt{font-weight:800;font-size:14px;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.day .pct{font-size:10.5px;font-weight:600;opacity:.8;white-space:nowrap}
 .day .note{position:absolute;top:9px;right:9px;width:6px;height:6px;border-radius:9px;background:var(--ink);opacity:.35}
 .day .short{display:none}
 .wkcell{
   border-radius:13px;padding:8px 10px;display:flex;flex-direction:column;justify-content:space-between;
-  border:1px dashed var(--line);min-height:108px;min-width:0
+  border:1px dashed var(--line);min-height:92px;min-width:0
 }
-.wkcell .n{font-size:12.5px;font-weight:700;color:var(--muted)}
-.wkcell .amt{font-weight:800;font-size:15px;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.wkcell .pct{font-size:11.5px;font-weight:600;text-align:right;color:var(--muted)}
+.wkcell .n{font-size:11.5px;font-weight:700;color:var(--muted)}
+.wkcell .amt{font-weight:800;font-size:13.5px;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wkcell .pct{font-size:10.5px;font-weight:600;text-align:right;color:var(--muted)}
 .weeklist{display:none;margin-top:14px;border-top:1px solid var(--line)}
 .weeklist div{display:flex;justify-content:space-between;padding:9px 2px;border-bottom:1px solid var(--line);font-weight:600}
 .weeklist div span:first-child{color:var(--muted)}
@@ -274,6 +286,8 @@ select.text{appearance:none;-webkit-appearance:none;background-image:linear-grad
 
 /* ---------- responsive ---------- */
 @media (max-width: 900px){
+  .bar{grid-template-columns:1fr auto;row-gap:12px}
+  .curbal{grid-column:1 / -1;grid-row:2;justify-self:stretch;justify-content:space-between}
   .stats{grid-template-columns:repeat(3,1fr)}
   .stat:nth-child(4){border-left:0}
   .stat:nth-child(n+4){border-top:1px solid var(--line)}
@@ -282,10 +296,10 @@ select.text{appearance:none;-webkit-appearance:none;background-image:linear-grad
   .cal{grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
   .wkcell,.dow.wk{display:none}
   .weeklist{display:block}
-  .day{min-height:72px;padding:6px 5px;border-radius:10px}
+  .day{min-height:62px;padding:5px 4px;border-radius:9px}
   .day .full,.day .pct{display:none}
   .day .short{display:block}
-  .day .amt{font-size:12px}
+  .day .amt{font-size:11px}
   .day .note{top:7px;right:6px;width:5px;height:5px}
   .day.today .n::after{display:none}
   .dow{padding:0 2px 2px;font-size:11.5px;text-align:center}
@@ -333,6 +347,13 @@ select.text{appearance:none;-webkit-appearance:none;background-image:linear-grad
         <b>Road to Glory</b>
         <span class="mile" id="mile" title="Trading days logged"><i></i><span id="miletext">Mile 0</span></span>
       </div>
+    </div>
+    <div class="curbal" id="curbal" aria-live="polite">
+      <div>
+        <div class="l" id="curbalLabel">Current balance</div>
+        <div class="v" id="curbalVal">–</div>
+      </div>
+      <span id="curbalChip"></span>
     </div>
     <div class="actions">
       <button class="btn gold" id="mtbtn" title="Import closed trades from a MetaTrader 5 report">
@@ -544,8 +565,31 @@ select.text{appearance:none;-webkit-appearance:none;background-image:linear-grad
     $("miletext").textContent = "Mile " + nDays;
     $("mile").title = nDays + " trading day" + (nDays===1?"":"s") + " logged";
     renderHero();
+    renderCurBal();
     renderStats();
     renderCalendar();
+  }
+
+  function renderCurBal(){
+    var total = 0, n = 0;
+    Object.keys(state.entries).forEach(function(k){ total += state.entries[k].amount; n++; });
+    var box = $("curbal");
+    if (state.start > 0){
+      var bal = state.start + total;
+      var str = Math.abs(bal).toLocaleString("en-US",{minimumFractionDigits:2, maximumFractionDigits:2}).split(".");
+      $("curbalLabel").textContent = "Current balance";
+      $("curbalVal").innerHTML = (bal < 0 ? "−" : "") + esc(sym()) + str[0] + '<span class="cents">.' + str[1] + '</span>';
+      $("curbalChip").innerHTML = n ? '<span class="chip ' + (total>0?'gain':total<0?'loss':'flat') + '">' + pctStr(total/state.start*100) + '</span>' : '';
+      box.className = "curbal";
+      box.title = "Starting balance " + fmt(state.start) + ", " + fmt(total,{signed:true}) + " since then";
+    } else {
+      $("curbalLabel").textContent = "Current balance";
+      $("curbalVal").textContent = "Not set";
+      $("curbalChip").innerHTML = '<button class="linkbtn setlink" id="curbalSet">Set balance</button>';
+      $("curbalSet").onclick = openSettings;
+      box.className = "curbal empty";
+      box.title = "";
+    }
   }
 
   function renderHero(){
